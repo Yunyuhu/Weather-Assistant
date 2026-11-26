@@ -12,11 +12,8 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       # 固定官方 Action 版本，避免標籤變動影響部署內容。
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -26,6 +23,14 @@ jobs:
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # 等待靜態檔案上傳工作結束後，再建立 Pages 部署。
       - name: Publish demo
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
