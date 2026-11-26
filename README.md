@@ -1,6 +1,6 @@
 # 氣象資料與 AI 助理
 
-[直接開啟公開 Demo](https://yunyuhu.github.io/Weather-Assistant)
+[直接開啟公開 Demo](https://yunyuhu.github.io/Weather-Assistant/)
 
 由 [2024 氣象與 LINE／GPT 練習](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/weather_crawler_linebot_gpt.ipynb)延伸的公開網頁，將官方預報、欄位驗證與 AI 說明串成完整操作。
 
@@ -40,7 +40,6 @@ DEMO_ENV_FILE=/absolute/path/to/.env.local PORT=8767 node dev.mjs
 - 預報涵蓋範圍以官方時段為準，不提供逐小時觀測、即時警報或超出資料日期的資訊。
 - AI 仍可能產生不精確推論，使用前請對照官方資料。
 - 單一 Worker 執行個體內的每 IP 限制不是分散式全域費用上限。
-- 目前部署金鑰有效期限為 24 小時，長期展示需更新金鑰。
 
 ## 官方文件
 
