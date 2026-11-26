@@ -1,0 +1,6 @@
+# 僅部署後端入口與建置所需來源，排除本機私密設定。
+.env*
+!.env.example
+.git
+.github
+node_modules
