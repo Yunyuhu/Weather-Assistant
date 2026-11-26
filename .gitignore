@@ -4,3 +4,6 @@
 dist/
 node_modules/
 .DS_Store
+
+# Vercel 的本機連結設定與工作站檔案不公開。
+.vercel/
