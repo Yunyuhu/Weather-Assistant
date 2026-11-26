@@ -1,0 +1,6 @@
+# 本機金鑰與編譯輸出不納入來源版本。
+.env*
+!.env.example
+dist/
+node_modules/
+.DS_Store
