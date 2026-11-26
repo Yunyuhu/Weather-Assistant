@@ -2,6 +2,8 @@
 
 [直接開啟公開 Demo](https://yunyuhu.github.io/Weather-Assistant/)
 
+展示介面已上線；即時服務待後端設定完成，目前會顯示服務設定中。
+
 由 [2024 氣象與 LINE／GPT 練習](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/weather_crawler_linebot_gpt.ipynb)延伸的公開網頁，將官方預報、欄位驗證與 AI 說明串成完整操作。
 
 ## 操作流程
@@ -18,6 +20,16 @@
 伺服器只解析特定資料物件，不執行上游 JavaScript。包含縣市白名單、數值驗證、五分鐘快取及資料更新時間檢查。來源格式變更或資料超過十二小時未更新時會顯示錯誤，避免繼續使用異常資料。
 
 這次新增的網頁串接與原始 Notebook 分開交代。原始 LINE 程式保留於原 repo；目前未提供已上線的 LINE 帳號，未將網頁展示宣稱為 LINE 已部署成果。
+
+## 部署方式
+
+[後端部署步驟與環境變數](DEPLOYMENT.md)
+
+展示介面由 GitHub Pages 發布，API 由 Vercel Functions 執行。前端只保存公開 API 網址，金鑰保存在後端秘密環境變數。`DEMO_ALLOWED_ORIGIN` 限定為 `https://yunyuhu.github.io`。
+
+- `.github/workflows/pages.yml`：發布 `public/`。
+- `api/index.mjs`：檢查來源並處理跨來源預檢。
+- `vercel.json`：指定 API 路由與執行期限。
 
 ## 程式與執行
 
