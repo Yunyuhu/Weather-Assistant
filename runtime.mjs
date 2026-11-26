@@ -7,10 +7,10 @@ export function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 }
 
-export async function readBody(request) {
+export async function readBody(request, env = {}) {
   if (!request.headers.get('content-type')?.includes('application/json')) throw new DemoError('請使用頁面上的操作送出內容。', 415);
   const origin = request.headers.get('origin');
-  if (origin && new URL(origin).host !== new URL(request.url).host) throw new DemoError('請由本展示頁面操作。', 403);
+  if (origin && origin !== new URL(request.url).origin && origin !== env.DEMO_ALLOWED_ORIGIN) throw new DemoError('請由本展示頁面操作。', 403);
   // 同時檢查宣告長度及實際串流長度，避免未帶 Content-Length 的過大請求。
   if (Number(request.headers.get('content-length')) > 24000) throw new DemoError('內容過長，請縮短後再試。', 413);
   let size = 0; const chunks = []; const reader = request.body?.getReader();
@@ -36,7 +36,7 @@ export function text(value, max = 2000) {
 /* 限制單一執行個體內的操作頻率；不將此機制宣稱為帳戶的全域費用上限。 */
 const rates = new Map();
 export function limit(request) {
-  const now = Date.now(), key = request.headers.get('cf-connecting-ip') || 'local';
+  const now = Date.now(), key = request.headers.get('x-real-ip') || request.headers.get('cf-connecting-ip') || 'local';
   for (const [id, state] of rates) if (state.until < now) rates.delete(id);
   const state = rates.get(key) || { count: 0, until: now + 60000 };
   if (state.count >= 8) throw new DemoError('操作較頻繁，請稍候一分鐘再試。', 429, 'demo_rate_limit');
@@ -45,7 +45,7 @@ export function limit(request) {
 
 async function apiKey(env) {
   if (env.OPENAI_API_KEY) return env.OPENAI_API_KEY;
-  // 部署時使用受保護的加密設定，避免本機金鑰出現在工具輸出或原始碼。
+  // 部署時使用受保護的加密設定，使金鑰與程式來源分開管理。
   if (env.OPENAI_API_KEY_ENCRYPTED && env.OPENAI_KEY_DECRYPTION_KEY) {
     try {
       const bytes = value => Uint8Array.from(atob(value), char => char.charCodeAt(0));
