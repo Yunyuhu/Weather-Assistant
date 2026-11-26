@@ -160,7 +160,7 @@ function renderAnswer(text) {
   const box = $('answer'); box.replaceChildren();
   for (const para of text.split(/\n+/).filter(Boolean)) {
     const p = document.createElement(/^\s*[-•*\d]+[.、)]?\s/.test(para) ? 'li' : 'p');
-    const parts = para.replace(/^\s*[-•*]\s*/, '').split(/(\d+(?:[～~-]\d+)?\s*(?:°C|度|%|％))/);
+    const parts = para.replace(/^\s*(?:[-•*]|\d+[.、)])\s*/, '').split(/(\d+(?:[～~-]\d+)?\s*(?:°C|度|%|％))/);
     parts.forEach((part, i) => { if (!part) return; if (i % 2) { const m = document.createElement('mark'); m.textContent = part; p.append(m); } else p.append(part); });
     if (p.tagName === 'LI') { let list = box.lastElementChild; if (list?.tagName !== 'UL') { list = document.createElement('ul'); box.append(list); } list.append(p); }
     else box.append(p);
@@ -180,7 +180,7 @@ async function ask(question) {
     const data = await read(await fetch(API_BASE + '/api/advice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city: $('city').value, question }), signal: current.signal }));
     if (adviceController !== current) return;
     currentForecast = data.forecast; renderForecast(data.forecast); renderAnswer(data.answer);
-    $('answer-card').dataset.state = 'done'; $('answer-source').textContent = '依據 ' + sourceText(data.forecast);
+    $('answer-card').dataset.state = 'done'; $('answer-source').textContent = sourceText(data.forecast).replace('資料：', '回答依據：');
   } catch (error) {
     if (error.name !== 'AbortError') { $('answer-card').dataset.state = 'error'; $('answer').textContent = '這次沒有拿到回答，上方的預報數值仍然可以直接看。'; status('advice-status', error.message, true); }
   } finally { if (adviceController === current) { adviceController = null; $('ask').disabled = !currentForecast; } }
