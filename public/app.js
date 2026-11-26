@@ -1,5 +1,7 @@
 // 公開頁面與 API 分開部署；本機未指定時沿用同源路徑。
-const API_BASE = document.querySelector('meta[name="api-base"]')?.content || '';
+const API_BASE = (document.querySelector('meta[name="api-base"]')?.content || '').replace(/\/+$/, '');
+// Pages 尚未接妥後端時停止請求，避免把靜態站的錯誤頁當成 API 回應。
+const API_READY = Boolean(API_BASE) || !location.hostname.endsWith('github.io');
 /* 更換地區時取消舊請求，避免較晚回傳的上一個縣市覆蓋目前畫面。 */
 const $ = id => document.getElementById(id);
 let currentForecast = null, forecastController, adviceController;
@@ -20,6 +22,7 @@ function renderForecast(data) {
   $('source-info').textContent = sourceText(data);
 }
 async function loadForecast() {
+  if (!API_READY) { status('forecast-status', '資料服務設定中，請稍後再試。'); status('advice-status', '即時回覆服務設定中，請稍後再試。'); return; }
   forecastController?.abort(); adviceController?.abort(); adviceController = null;
   const current = new AbortController(); forecastController = current; currentForecast = null;
   $('ask').disabled = true; $('forecast').replaceChildren(); $('source-info').textContent = '';
