@@ -1,11 +1,96 @@
 <!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8">
-  <!-- 完成後端部署後，將公開 API 網址填入 content；此欄不可填入金鑰。 -->
-  <meta name="api-base" content="https://weather-assistant-three.vercel.app"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="胡芸毓的氣象資料與 AI 串接展示，以中央氣象署預報為依據產生出門建議。"><title>氣象資料與 AI 助理｜胡芸毓</title><link rel="stylesheet" href="style.css"></head><body>
-<!-- 資料卡與生成說明分開呈現，讓訪客能直接核對模型使用的預報。 -->
-<header><a href="https://yunyu-web-digital-profile.vercel.app">胡芸毓 <span>Yunyu Hu</span></a><a href="https://www.cwa.gov.tw/V8/C/W/County/index.html" target="_blank" rel="noopener">中央氣象署預報</a></header>
-<main><section class="intro"><p class="eyebrow">AI 應用實作 · 外部資料串接</p><h1>出門前，<br>把天氣看明白。</h1><p>先讀取中央氣象署的縣市預報，再讓 AI 根據相同資料回答你的問題。</p></section>
-<section class="panel"><label for="city">選擇縣市</label><select id="city"><option value="63">臺北市</option><option value="65">新北市</option><option value="68">桃園市</option><option value="10017">基隆市</option><option value="10018">新竹市</option><option value="10004">新竹縣</option><option value="10005">苗栗縣</option><option value="66">臺中市</option><option value="10007">彰化縣</option><option value="10008">南投縣</option><option value="10009">雲林縣</option><option value="10020">嘉義市</option><option value="10010">嘉義縣</option><option value="67">臺南市</option><option value="64">高雄市</option><option value="10013">屏東縣</option><option value="10002">宜蘭縣</option><option value="10015">花蓮縣</option><option value="10014">臺東縣</option><option value="10016">澎湖縣</option><option value="09020">金門縣</option><option value="09007">連江縣</option></select><div class="actions"><button id="refresh">更新預報</button></div><p id="forecast-status" class="status" role="status">正在讀取官方預報…</p><p id="source-info" class="source"></p></section>
-<section id="forecast" class="forecast" aria-label="中央氣象署預報數值" aria-live="polite"></section>
-<section class="layout"><div class="panel"><h2>你想知道什麼？</h2><label for="question">向氣象助理提問</label><textarea id="question" maxlength="1000" placeholder="例如：接下來出門需要帶傘嗎？衣服怎麼準備？"></textarea><div><button class="example" id="umbrella">需要帶傘嗎？</button><button class="example" id="clothes">衣服怎麼準備？</button></div><div class="actions"><button id="ask" class="primary" disabled>根據預報回答</button><button id="clear">清除問題</button></div><p id="advice-status" class="status" role="status">只回答目前三個預報時段能支持的內容。</p></div><div class="panel"><h2>AI 的說明與建議</h2><div id="answer" class="result" aria-live="polite">提出問題後，回覆會顯示在這裡。</div><p id="answer-source" class="source"></p></div></section>
-<section class="about"><h2>資料先到位，回覆才有依據。</h2><p>原始練習包含氣象開放資料解析、LINE webhook 與 GPT 回覆。2026 整理版將資料取得、欄位驗證與 AI 說明串成可操作的網頁，並顯示模型實際使用的預報。</p><p class="small">目前使用中央氣象署公開網站的 36 小時縣市預報資料。預報時段、地區與數值以資料卡為準；此展示不提供即時警報。問題會由 OpenAI API 處理，本展示不保存提問紀錄。</p></section></main><footer><span>胡芸毓的 AI 實作整理</span><a href="https://www.cwa.gov.tw/V8/C/W/County/index.html">預報來源：中央氣象署</a><a href="https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/weather_crawler_linebot_gpt.ipynb">原始程式</a></footer><script src="app.js"></script></body></html>
+<!-- 後端 API 網址；此欄不可填入金鑰。本機測試時清空即使用同源 API。 -->
+<meta name="api-base" content="https://weather-assistant-three.vercel.app">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="選一個縣市，看中央氣象署接下來 36 小時的預報，再問 AI 要不要帶傘、怎麼穿。">
+<meta name="theme-color" content="#3f7cc4">
+<title>天氣問問｜36 小時預報與出門建議</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-sky="loading">
+<div class="sky" aria-hidden="true"><span class="orb"></span><span class="cloud c1"></span><span class="cloud c2"></span><span class="rain-layer"></span></div>
+
+<header class="topbar">
+  <span class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="10" r="4"/><path d="M8 18h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.6 1.6A2.8 2.8 0 0 0 8 18z"/></svg>天氣問問</span>
+  <a class="by" href="https://yunyu-web-digital-profile.vercel.app">© 2026 Yunyu Hu</a>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="place">
+    <div class="now">
+      <p class="when" id="now-when">正在連線氣象署…</p>
+      <h1 id="place">臺北市</h1>
+      <div class="now-main">
+        <span class="now-icon" id="now-icon" aria-hidden="true"></span>
+        <div>
+          <p class="now-temp"><span id="now-low">--</span><small>°</small><span class="dash">–</span><span id="now-high">--</span><small>°C</small></p>
+          <p class="now-desc" id="now-desc">&nbsp;</p>
+        </div>
+      </div>
+      <p class="now-rain" id="now-rain">&nbsp;</p>
+    </div>
+
+    <div class="picker">
+      <p class="label" id="city-label">選縣市</p>
+      <div class="chips" role="radiogroup" aria-labelledby="city-label" id="city-chips"></div>
+      <label class="more">其他縣市
+        <select id="city" aria-label="選擇縣市">
+          <option value="63">臺北市</option><option value="65">新北市</option><option value="68">桃園市</option><option value="10017">基隆市</option><option value="10018">新竹市</option><option value="10004">新竹縣</option><option value="10005">苗栗縣</option><option value="66">臺中市</option><option value="10007">彰化縣</option><option value="10008">南投縣</option><option value="10009">雲林縣</option><option value="10020">嘉義市</option><option value="10010">嘉義縣</option><option value="67">臺南市</option><option value="64">高雄市</option><option value="10013">屏東縣</option><option value="10002">宜蘭縣</option><option value="10015">花蓮縣</option><option value="10014">臺東縣</option><option value="10016">澎湖縣</option><option value="09020">金門縣</option><option value="09007">連江縣</option>
+        </select>
+      </label>
+      <p class="status" id="forecast-status" role="status"></p>
+    </div>
+  </section>
+
+  <section class="timeline" aria-label="接下來 36 小時">
+    <div class="timeline-head">
+      <h2>接下來 36 小時</h2>
+      <button class="ghost" id="refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>重新整理</button>
+    </div>
+    <div class="periods" id="forecast" aria-live="polite"></div>
+    <p class="source" id="source-info"></p>
+  </section>
+
+  <section class="ask" aria-labelledby="ask-title">
+    <div class="ask-left">
+      <h2 id="ask-title">想問什麼？</h2>
+      <p class="hint">點一個問題直接問，或自己輸入。AI 只會根據上面這三個時段的預報回答。</p>
+      <div class="quick" id="quick">
+        <button type="button" data-q="接下來出門需要帶傘嗎？請依每個預報時段說明。">要帶傘嗎？</button>
+        <button type="button" data-q="依目前預報的溫度，衣服怎麼準備比較合適？">要穿什麼？</button>
+        <button type="button" data-q="明天白天適合到戶外運動或騎車嗎？">適合戶外活動嗎？</button>
+        <button type="button" data-q="今晚到明天早上會不會冷？睡覺要注意什麼？">晚上會冷嗎？</button>
+      </div>
+      <form id="ask-form">
+        <label class="sr" for="question">自己輸入問題</label>
+        <textarea id="question" maxlength="1000" rows="2" placeholder="例如：週末要去爬山，需要準備什麼？"></textarea>
+        <div class="row">
+          <button id="ask" class="primary" type="submit" disabled>問問看</button>
+          <button id="clear" class="ghost" type="button">清除</button>
+          <p class="status" id="advice-status" role="status"></p>
+        </div>
+      </form>
+    </div>
+    <div class="answer-card" id="answer-card" data-state="idle" aria-live="polite">
+      <p class="answer-q" id="answer-q">還沒有問題</p>
+      <div class="answer" id="answer">選一個左邊的問題試試看，回答會出現在這裡。</div>
+      <p class="source" id="answer-source"></p>
+    </div>
+  </section>
+
+  <details class="about">
+    <summary>關於這個作品</summary>
+    <div class="about-body">
+      <ol class="pipeline">
+        <li><b>取得官方預報</b>伺服器讀取中央氣象署公開的 36 小時縣市預報，整理成三個時段。</li>
+        <li><b>檢查欄位</b>溫度、降雨機率、天氣描述都驗證過才送出，資料不完整就停止，不讓 AI 猜。</li>
+        <li><b>依資料回答</b>把同一份預報和你的問題交給 OpenAI API，只回答預報支持的內容。</li>
+      </ol>
+      <p>前端放在 GitHub Pages，API 部署在 Vercel，金鑰只存在伺服器。這裡不提供即時警報，數值以氣象署發布為準；問題送出後由 OpenAI 處理，本站不保存紀錄。</p>
+      <p class="links"><a href="https://github.com/Yunyuhu/Weather-Assistant">原始碼</a><a href="https://www.cwa.gov.tw/V8/C/W/County/index.html">中央氣象署縣市預報</a><a href="https://yunyu-web-digital-profile.vercel.app">作者作品集</a></p>
+    </div>
+  </details>
+</main>
+<script src="app.js"></script>
+</body></html>
