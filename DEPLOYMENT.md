@@ -30,7 +30,7 @@
 4. 整合時將 `public/index.html` 的 `meta[name="api-base"]` 之 `content` 設為正式 API 網址，推送後由 Pages 自動更新。
 5. 從 Pages 實際送出請求，核對瀏覽器、API、模型回覆與資料來源的完整往返。
 
-目前 Pages 已連接 `https://weather-assistant-three.vercel.app`。後端目前以來源檔直接部署，尚未連接 Git 自動部署；更新後端程式時需重新部署。本機測試時可清空 `api-base` 並使用同源 API。
+目前 Pages 已連接 `https://weather-assistant-three.vercel.app`。後端已連接 GitHub，推送到 `main` 後由 Vercel 自動部署。本機測試時可清空 `api-base` 並使用同源 API。
 
 ## 確認項目
 
