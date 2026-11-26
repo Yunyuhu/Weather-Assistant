@@ -45,6 +45,8 @@ export function limit(request) {
 
 async function apiKey(env) {
   if (env.OPENAI_API_KEY) return env.OPENAI_API_KEY;
+  // 相容既有部署欄位：一般 Secret Key 與加密封裝都只在伺服器記憶體處理。
+  if (typeof env.OPENAI_API_KEY_ENCRYPTED === 'string' && env.OPENAI_API_KEY_ENCRYPTED.startsWith('sk-')) return env.OPENAI_API_KEY_ENCRYPTED;
   // 部署時使用受保護的加密設定，使金鑰與程式來源分開管理。
   if (env.OPENAI_API_KEY_ENCRYPTED && env.OPENAI_KEY_DECRYPTION_KEY) {
     try {
