@@ -8,4 +8,7 @@ const common = (await readFile('runtime.mjs', 'utf8')).replace(/^export /gm, '')
 const app = (await readFile('worker.mjs', 'utf8')).replace(/^import .*from '.\/runtime.mjs';\n/gm, '');
 await mkdir('dist/server', { recursive: true });
 await writeFile('dist/server/index.js', `const ASSETS = ${JSON.stringify(assets)};\n${common}\n${app}`);
-console.log('Worker 與靜態介面已完成建置。');
+// Vercel 只發布 API；公開介面由 GitHub Pages 提供。
+await mkdir('dist/empty', { recursive: true });
+await writeFile('dist/empty/status.txt', 'API service');
+console.log('API 與本機展示已完成建置。');
