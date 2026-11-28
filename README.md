@@ -56,3 +56,9 @@ DEMO_ENV_FILE=/absolute/path/to/.env.local PORT=8767 node dev.mjs
 ## 官方文件
 
 [中央氣象署](https://www.cwa.gov.tw/V8/C/W/County/index.html) · [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create)
+
+## 程式碼授權
+
+© 2026 Yunyu Hu。本儲存庫由 Yunyu Hu 持有著作權的原創程式碼依 [Apache License 2.0](LICENSE) 授權。第三方內容與服務適用各自的授權或使用條款。
+
+中央氣象署的預報資料依其來源條款使用。
